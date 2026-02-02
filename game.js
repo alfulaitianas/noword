@@ -7,60 +7,71 @@ const statusDisplay = document.getElementById('status');
 
 let peer, conn;
 let connections = [];
-const words = ["أسد", "سيارة", "بيتزا", "برج إيفل", "طيارة", "كرة قدم", "ساعة", "نظارة", "روبوت", "بطيخ", "شمس", "مظلة"];
+const words = ["صاروخ", "كاميرا", "بيت شعر", "سمكة قرش", "برج خليفة", "سماعة", "قهوة", "خفاش", "بركان", "مخ"];
 
-// تهيئة الاتصال
+// تهيئة PeerJS
 peer = new Peer();
 
 peer.on('open', (id) => {
     peerIdDisplay.innerText = id;
-    statusDisplay.innerText = "جاهز! أرسل معرفك لأصدقائك.";
+    statusDisplay.innerText = "متصل وجاهز للعب";
 });
 
-// المضيف: يستقبل الاتصالات
+// نسخ المعرف عند الضغط عليه
+peerIdDisplay.onclick = () => {
+    navigator.clipboard.writeText(peerIdDisplay.innerText);
+    alert("تم نسخ المعرف! أرسله لأصدقائك.");
+};
+
+// منطق المضيف
 peer.on('connection', (c) => {
     connections.push(c);
     setupDataListener(c);
-    statusDisplay.innerText = "متصل: لاعب جديد دخل الغرفة!";
+    statusDisplay.innerText = "لاعب جديد انضم!";
 });
 
-// الضيف: يتصل بالمضيف
+// منطق الضيف
 function connectToHost() {
     const hostId = joinInput.value;
-    if(!hostId) return alert("من فضلك أدخل المعرف");
+    if(!hostId) return;
     conn = peer.connect(hostId);
     setupDataListener(conn);
-    statusDisplay.innerText = "جاري الاتصال بالمضيف...";
 }
 
 function setupDataListener(connection) {
     connection.on('data', (data) => {
-        if (data.type === 'draw') {
-            drawRemote(data.x, data.y, data.isDrawing);
-        } else if (data.type === 'clear') {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        if (data.type === 'draw') drawRemote(data.x, data.y, data.isDrawing);
+        if (data.type === 'clear') ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
-    connection.on('open', () => {
-        statusDisplay.innerText = "تم الاتصال! ابدأ الرسم.";
-    });
+    connection.on('open', () => { statusDisplay.innerText = "أنت الآن داخل الغرفة!"; });
 }
 
-// منطق الرسم
+// الرسم
 let isDrawing = false;
-canvas.addEventListener('mousedown', () => { isDrawing = true; ctx.beginPath(); });
-canvas.addEventListener('mouseup', () => { isDrawing = false; ctx.beginPath(); });
-canvas.addEventListener('mousemove', draw);
 
-// دعم اللمس للجوال
-canvas.addEventListener('touchstart', (e) => { isDrawing = true; draw(e.touches[0]); e.preventDefault(); });
-canvas.addEventListener('touchend', () => { isDrawing = false; ctx.beginPath(); });
+const getCoords = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+    };
+};
+
+const startDrawing = (e) => { isDrawing = true; draw(e); };
+const stopDrawing = () => { isDrawing = false; ctx.beginPath(); };
+
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('touchstart', startDrawing);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('touchend', stopDrawing);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
 
 function draw(e) {
     if (!isDrawing) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.pageX) - rect.left;
-    const y = (e.clientY || e.pageY) - rect.top;
+    const {x, y} = getCoords(e);
 
     drawRemote(x, y, true);
     
@@ -72,7 +83,7 @@ function draw(e) {
 function drawRemote(x, y, drawing) {
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = "#2c3e50";
+    ctx.strokeStyle = "#1e293b";
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.beginPath();
@@ -87,7 +98,6 @@ function clearCanvas() {
 }
 
 function generateWord() {
-    const randomWord = words[Math.floor(Math.random() * words.length)];
-    wordDisplay.innerText = "كلمتك السرية هي: " + randomWord;
-    // الكلمة تظهر فقط للشخص الذي ضغط على الزر
+    const word = words[Math.floor(Math.random() * words.length)];
+    wordDisplay.innerText = "كلمتك السرية: " + word;
 }
