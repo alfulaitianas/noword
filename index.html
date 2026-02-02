@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة بدون كلمات - P2P</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        #canvas { border: 5px solid #2c3e50; background: white; border-radius: 10px; cursor: crosshair; max-width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .controls { margin: 20px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .setup-box { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; transition: 0.3s; }
+        button:hover { background: #2ecc71; }
+        #peer-id-display { font-weight: bold; color: #e67e22; background: #eee; padding: 5px 10px; border-radius: 4px; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
+        .word-box { font-size: 24px; color: #c0392b; font-weight: bold; margin: 15px; min-height: 35px; }
+    </style>
+</head>
+<body>
+    <h1>لعبة "بدون كلمات" أونلاين 🎨</h1>
+    
+    <div class="setup-box">
+        <p>معرفك الخاص: <span id="peer-id-display">جاري الاتصال...</span></p>
+        <input type="text" id="join-id" placeholder="أدخل معرف المضيف هنا">
+        <button onclick="connectToHost()">انضم للعبة</button>
+    </div>
+
+    <div class="word-box" id="secret-word"></div>
+
+    <div class="controls">
+        <button onclick="generateWord()" style="background: #2980b9;">كلمة جديدة</button>
+        <button onclick="clearCanvas()" style="background: #e74c3c;">مسح اللوحة</button>
+        <p id="status">الحالة: في انتظار اللاعبين...</p>
+    </div>
+
+    <canvas id="canvas" width="800" height="500"></canvas>
+
+    <script src="game.js"></script>
+</body>
+</html>
