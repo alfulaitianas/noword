@@ -3,38 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة بدون كلمات - P2P</title>
+    <title>بدون كلمات | Silent Sketch</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        #canvas { border: 5px solid #2c3e50; background: white; border-radius: 10px; cursor: crosshair; max-width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { margin: 20px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        .setup-box { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; transition: 0.3s; }
-        button:hover { background: #2ecc71; }
-        #peer-id-display { font-weight: bold; color: #e67e22; background: #eee; padding: 5px 10px; border-radius: 4px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
-        .word-box { font-size: 24px; color: #c0392b; font-weight: bold; margin: 15px; min-height: 35px; }
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .setup-section {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--secondary); transform: translateY(-2px); }
+
+        .btn-danger { background: #ef4444; color: white; margin-top: 10px; }
+
+        .word-display {
+            font-size: 1.5rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        #canvas-container {
+            position: relative;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 20px;
+            line-height: 0;
+        }
+
+        #canvas {
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        #peer-id-display {
+            cursor: pointer;
+            text-decoration: underline;
+            color: #818cf8;
+        }
     </style>
 </head>
 <body>
-    <h1>لعبة "بدون كلمات" أونلاين 🎨</h1>
-    
-    <div class="setup-box">
-        <p>معرفك الخاص: <span id="peer-id-display">جاري الاتصال...</span></p>
-        <input type="text" id="join-id" placeholder="أدخل معرف المضيف هنا">
-        <button onclick="connectToHost()">انضم للعبة</button>
+
+    <div class="glass-card">
+        <h1>بدون كلمات 🎭</h1>
+        <p>معرفك (اضغط للنسخ): <span id="peer-id-display">...</span></p>
+
+        <div class="setup-section">
+            <input type="text" id="join-id" placeholder="أدخل معرف المضيف">
+            <button class="btn-primary" onclick="connectToHost()">دخول الغرفة</button>
+        </div>
+
+        <div class="word-display" id="secret-word">انتظر دورك للرسم...</div>
+
+        <div id="canvas-container">
+            <canvas id="canvas" width="750" height="450"></canvas>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn-primary" onclick="generateWord()" style="background: #8b5cf6;">🎲 كلمة جديدة</button>
+            <button class="btn-danger" onclick="clearCanvas()">🗑️ مسح الكل</button>
+        </div>
+
+        <div class="status-badge" id="status">جاري تشغيل النظام...</div>
     </div>
-
-    <div class="word-box" id="secret-word"></div>
-
-    <div class="controls">
-        <button onclick="generateWord()" style="background: #2980b9;">كلمة جديدة</button>
-        <button onclick="clearCanvas()" style="background: #e74c3c;">مسح اللوحة</button>
-        <p id="status">الحالة: في انتظار اللاعبين...</p>
-    </div>
-
-    <canvas id="canvas" width="800" height="500"></canvas>
 
     <script src="game.js"></script>
 </body>
